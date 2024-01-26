@@ -1,0 +1,28 @@
+﻿# Define the subscriptions and resource groups
+$subscriptionsAndResourceGroups = @{
+    '8e8f648b-66db-4537-a9cf-afdd75086b88' = @('rg-ot4dev', 'RG-OT1PRD')
+    'c8f03d99-7739-4924-b2a7-5b65bcb69481' = @('rg-ot2pre')
+    '9617cacf-d020-4b6e-bdf4-5afeea0f3843' = @('RG-OT1DRUKW')
+}
+
+#Timezone is UTC 20:00 UTC is 18:00 UK Time
+$shutdownTime = "20:00"
+
+# Iterate over each subscription and resource group
+foreach ($subscription in $subscriptionsAndResourceGroups.Keys) {
+    $resourceGroups = $subscriptionsAndResourceGroups[$subscription]
+    
+    # Set the current subscription
+    az account set --subscription $subscription
+    
+    # Iterate over each resource group
+    foreach ($resourceGroup in $resourceGroups) {
+        # Get the list of VM names in the resource group
+        $vmNames = az vm list --resource-group $resourceGroup --query "[].name" --output tsv
+        
+        # Iterate over each VM and set auto-shutdown
+        foreach ($vmName in $vmNames) {
+            az vm auto-shutdown --resource-group $resourceGroup --name $vmName --time $shutdownTime
+        }
+    }
+}
